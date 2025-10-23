@@ -1,0 +1,30 @@
+# Use a build container to download piper
+FROM alpine:latest as piper-builder
+RUN apk add --no-cache curl
+RUN curl -L "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz" -o piper.tar.gz
+RUN tar -zxvf piper.tar.gz
+
+# Main container
+FROM python:3.11-slim
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends curl libopus0 ffmpeg
+
+# Copy piper from the build container
+COPY --from=piper-builder /piper/piper /usr/local/bin/
+
+# Copy app files
+COPY . .
+
+# Install python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Download a default voice for piper
+RUN curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx" -o en_US-lessac-medium.onnx
+RUN curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json" -o en_US-lessac-medium.onnx.json
+
+
+# Run the bot
+CMD ["python", "main.py"]
+

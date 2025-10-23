@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  discord-tts-bot:
+    build:
+      context: .
+      dockerfile: Containerfile
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+    volumes:
+      - ./db.json:/app/db.json
+    restart: unless-stopped
+    network_mode: "host"
+
